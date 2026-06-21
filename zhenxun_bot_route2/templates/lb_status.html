@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <style>
+        @font-face {
+            font-family: "NotoColorEmoji";
+            src: url("file:///{{ font_path_emoji }}") format("truetype");
+            font-weight: normal;
+            font-style: normal;
+            font-display: swap;
+        }
+        body {
+            font-family: 'Microsoft YaHei','NotoColorEmoji','Segoe UI Emoji',sans-serif;
+            background: {{ body_bg }};
+            padding: 20px;
+            margin: 0;
+            min-width: {{ width }}px;
+        }
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+        .title {
+            font-size: 22px;
+            font-weight: bold;
+            color: #333;
+            text-align: center;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #4facfe;
+        }
+        .bot-section {
+            margin-bottom: 20px;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 2px solid #e0e0e0;
+        }
+        .bot-header {
+            padding: 12px 15px;
+            font-size: 16px;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .bot-header.primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .bot-header.secondary {
+            background: #f0f7ff;
+            color: #333;
+        }
+        .status-badge {
+            padding: 3px 10px;
+            border-radius: 10px;
+            font-size: 12px;
+            font-weight: bold;
+            color: white;
+        }
+        .status-badge.online { background: #4CAF50; }
+        .status-badge.offline { background: #f44336; }
+        .bot-body {
+            padding: 12px 15px;
+            background: white;
+        }
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 6px 0;
+            border-bottom: 1px solid #f0f0f0;
+            font-size: 14px;
+        }
+        .info-row:last-child { border-bottom: none; }
+        .info-label { color: #666; }
+        .info-value { color: #333; font-weight: 600; }
+        .info-value.warn { color: #f5af19; }
+        .info-value.danger { color: #f44336; }
+        .info-value.success { color: #4CAF50; }
+        .limit-bar {
+            height: 8px;
+            border-radius: 4px;
+            background: #e0e0e0;
+            margin-top: 4px;
+            overflow: hidden;
+        }
+        .limit-bar-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.3s;
+        }
+        .limit-bar-fill.low { background: linear-gradient(90deg, #4CAF50, #8BC34A); }
+        .limit-bar-fill.mid { background: linear-gradient(90deg, #f5af19, #f12711); }
+        .limit-bar-fill.high { background: linear-gradient(90deg, #f44336, #e91e63); }
+        .plugin-tag {
+            background: #e3f2fd;
+            color: #1976d2;
+            padding: 2px 10px;
+            border-radius: 10px;
+            font-size: 12px;
+            display: inline-block;
+            margin: 2px;
+        }
+        .footer {
+            margin-top: 15px;
+            padding-top: 10px;
+            border-top: 2px solid #4facfe;
+            text-align: center;
+            font-size: 12px;
+            color: #999;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="title">Bot路由状态 v2.0</div>
+
+        <div class="bot-section">
+            <div class="bot-header primary">
+                <span>主Bot [{{ primary_bot }}]</span>
+                <span class="status-badge {{ 'online' if primary_online else 'offline' }}">
+                    {{ '在线' if primary_online else '离线' }}
+                </span>
+            </div>
+            <div class="bot-body">
+                <div class="info-row">
+                    <span class="info-label">总发送</span>
+                    <span class="info-value">{{ primary_send }} 条</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">图片</span>
+                    <span class="info-value">{{ primary_images }} 张</span>
+                </div>
+                {% if primary_daily_limit %}
+                <div class="info-row">
+                    <span class="info-label">总限额</span>
+                    <span class="info-value {{ 'danger' if primary_limit_pct >= 90 else 'warn' if primary_limit_pct >= 70 else 'success' }}">
+                        {{ primary_send }}/{{ primary_daily_limit }} (剩余{{ primary_remaining }}条)
+                    </span>
+                </div>
+                <div class="limit-bar">
+                    <div class="limit-bar-fill {{ 'high' if primary_limit_pct >= 90 else 'mid' if primary_limit_pct >= 70 else 'low' }}"
+                         style="width: {{ primary_limit_pct }}%"></div>
+                </div>
+                {% endif %}
+                {% if primary_plugin_limits %}
+                <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #f0f0f0;">
+                    {% for pl in primary_plugin_limits %}
+                    <div class="info-row">
+                        <span class="info-label">📋 {{ pl.plugin }}</span>
+                        <span class="info-value {{ 'danger' if pl.limit_pct >= 90 else 'warn' if pl.limit_pct >= 70 else 'success' }}">
+                            {{ pl.send }}/{{ pl.daily_limit }} (余{{ pl.remaining }})
+                        </span>
+                    </div>
+                    <div class="limit-bar">
+                        <div class="limit-bar-fill {{ 'high' if pl.limit_pct >= 90 else 'mid' if pl.limit_pct >= 70 else 'low' }}"
+                             style="width: {{ pl.limit_pct }}%"></div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        {% if secondary_bots %}
+        <div class="bot-section">
+            <div class="bot-header secondary">
+                <span>副Bot池 ({{ secondary_bots|length }}个)</span>
+            </div>
+            <div class="bot-body">
+                {% for sb in secondary_bots %}
+                <div style="margin-bottom: 12px; padding-bottom: 12px; {% if not loop.last %}border-bottom: 1px solid #f0f0f0{% endif %}">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                        <span style="font-weight: 600; font-size: 15px;">{{ sb.bot_id }}</span>
+                        <span class="status-badge {{ 'online' if sb.online else 'offline' }}">
+                            {{ '在线' if sb.online else '离线' }}
+                        </span>
+                    </div>
+
+                    <div class="info-row">
+                        <span class="info-label">总限额</span>
+                        <span class="info-value {{ 'danger' if sb.limit_pct >= 90 else 'warn' if sb.limit_pct >= 70 else 'success' }}">
+                            {{ sb.send }}/{{ sb.daily_limit }} (剩余{{ sb.remaining }}条)
+                        </span>
+                    </div>
+                    <div class="limit-bar">
+                        <div class="limit-bar-fill {{ 'high' if sb.limit_pct >= 90 else 'mid' if sb.limit_pct >= 70 else 'low' }}"
+                             style="width: {{ sb.limit_pct }}%"></div>
+                    </div>
+
+                    {% if sb.plugins %}
+                    <div style="margin-top: 8px;">
+                        {% for p in sb.plugins %}
+                        <span class="plugin-tag">{{ p }}</span>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="footer">
+            插件: {{ all_plugins | join(', ') }}
+            {% if dedup_enabled %}
+            | 去重: {{ '启用' if dedup_info else '禁用' }}{% if dedup_info %} (拦截{{ dedup_info.blocked }}次, 缓存{{ dedup_info.cached }}条){% endif %}
+            {% endif %}
+            | 超管拦截: {{ '开启' if intercept_superusers else '关闭' }}
+        </div>
+    </div>
+</body>
+</html>

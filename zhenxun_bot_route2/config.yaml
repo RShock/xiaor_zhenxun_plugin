@@ -1,0 +1,25 @@
+primary_bot: "3214908465"
+primary_daily_limit: 400
+
+primary_plugins:
+  - "zhenxun_plugin_fishing"
+
+primary_plugin_limits:
+  - plugin: "zhenxun_plugin_fishing"
+    daily_limit: 120
+
+secondary_bots:
+  - bot_id: "3999789597"
+    daily_limit: 300
+    plugins:
+      - "nonebot_plugin_handle"
+
+  - bot_id: "2068933753"
+    daily_limit: 300
+    plugins:
+      - "zhenxun_plugin_fishing"
+
+  - bot_id: "1044706790"
+    daily_limit: 300
+    plugins:
+      - "zhenxun_plugin_fishing"
